@@ -1,0 +1,23 @@
+Prompt Engine is a pocket <b>prompt compiler</b> for people who think in Persian and work with AI in English.
+
+It is not a translator. Write what you want in Persian, and the app compiles it into a clean, executable English prompt for Claude Code, OpenCode, ChatGPT, Gemini or any other LLM — then translates that finalized English prompt back into faithful Persian so both versions say exactly the same thing.
+
+<b>Why it is different</b>
+• Zero-hallucination policy — it never invents frameworks, databases, libraries or features you did not ask for.
+• Hard constraints stay hard — "Do not use PostgreSQL" never becomes "PostgreSQL is not preferred".
+• Honest gaps — missing details are listed as <i>missing information</i> instead of being guessed.
+• Clear separation of preserved requirements, assumptions, missing information and optional suggestions.
+• Automatic intent detection across 10 categories: coding, debugging, research, writing, image generation, translation, data analysis, planning, automation, general.
+• Proportional output — a one-line edit gets a one-line prompt, a big architecture gets a structured one.
+
+<b>Built for the phone</b>
+• Dark neon RTL interface with the Vazirmatn font; full Persian and English UI.
+• One-tap copy of the English or Persian prompt, "Use in Claude Code / OpenCode", and Android Share.
+• Send text to the app from any other app with Share → Prompt Engine.
+• Live token usage with RPD / TPM / RPM meters for the model you picked.
+• Pick any Gemini text model from the built-in catalog, or bring your own system prompt.
+
+<b>Your key, your device</b>
+You bring a free Google AI Studio API key (aistudio.google.com/apikey) and enter it in Settings. It is stored only on your phone and sent only to Google. The app requests just one permission — Internet. No accounts, no analytics, no ads.
+
+Inspired by the open-source Astr0Net/PromptCompiler project.

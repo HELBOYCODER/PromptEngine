@@ -1,0 +1,1 @@
+Compile Persian ideas into precise, hallucination-free English AI prompts.

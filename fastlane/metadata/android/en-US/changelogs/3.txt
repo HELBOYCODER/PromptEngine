@@ -1,0 +1,1 @@
+2.0.0 — complete rewrite as a native Android app (Kotlin + Jetpack Compose). New neon UI, new icon, English/Persian interface, usage meters, Share-to-app, and all keys/permissions managed from Settings.

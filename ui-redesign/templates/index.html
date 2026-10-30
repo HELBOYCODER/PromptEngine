@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#08090f">
+    <title>Prompt Engine</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+            <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14l4-4M3.34 17a10 10 0 1 1 17.32 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+            <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 15V6a3 3 0 0 1 3-3h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+            <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" fill="currentColor"/></symbol>
+            <symbol id="i-terminal" viewBox="0 0 24 24"><path d="M4 6l6 6-6 6M13 18h7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+            <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        </defs>
+    </svg>
+
+    <div class="app-shell">
+
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-logo"><svg><use href="#i-spark"/></svg></div>
+                <div class="brand-text">
+                    <h1>Prompt Engine</h1>
+                    <span class="brand-sub">پرامپت فارسی → انگلیسی</span>
+                </div>
+            </div>
+            <div class="topbar-meta">
+                <button id="toggle-sidebar" class="icon-btn usage-trigger" aria-expanded="false" aria-controls="usage-sidebar" aria-label="مصرف توکن">
+                    <svg><use href="#i-gauge"/></svg>
+                    <span id="usage-header-summary" class="usage-header-summary" aria-live="polite">
+                        <span class="usage-header-total">—</span>
+                        <span class="usage-header-requests"></span>
+                    </span>
+                </button>
+                <button id="manage-settings" class="icon-btn" aria-label="تنظیمات"><svg><use href="#i-gear"/></svg></button>
+            </div>
+        </header>
+
+        <main class="screen" id="screen">
+
+            <section class="card composer">
+                <div class="card-head">
+                    <span class="section-label">پرامپت فارسی شما</span>
+                    <span class="live-pill"><span class="live-dot"></span><span id="active-model">—</span></span>
+                </div>
+                <textarea id="persian-prompt" class="textarea" rows="4" placeholder="مثلاً: یه وب‌سایت فروشگاهی با گتگستای بساز که قیمت محصولات رو نشون بده..."></textarea>
+                <div class="composer-foot">
+                    <label class="select-wrap" title="انتخاب مدل">
+                        <select id="model-select" class="model-select"></select>
+                        <svg class="select-chev"><use href="#i-chev"/></svg>
+                    </label>
+                    <span class="char-count" id="char-count" aria-hidden="true">۰</span>
+                </div>
+            </section>
+
+            <section id="empty-state" class="empty-state">
+                <div class="empty-orb"><svg><use href="#i-spark"/></svg></div>
+                <p class="empty-title">ایده‌ات را فارسی بنویس</p>
+                <p class="empty-sub">پرامپت مرتب، دقیق و آماده‌ی انگلیسی تحویل بگیر.</p>
+            </section>
+
+            <section id="output-section" class="result">
+                <div class="result-head">
+                    <div class="result-badges">
+                        <span id="category-badge" class="cat-badge"></span>
+                        <span id="subcategory-badge" class="subcat-badge hidden"></span>
+                    </div>
+                    <p id="purpose" class="purpose"></p>
+                </div>
+
+                <div class="segmented" role="tablist" aria-label="زبان پرامپت">
+                    <button class="seg-btn active" role="tab" aria-selected="true" data-tab="en" id="tab-en">انگلیسی</button>
+                    <button class="seg-btn" role="tab" aria-selected="false" data-tab="fa" id="tab-fa">فارسی</button>
+                    <span class="seg-thumb" aria-hidden="true"></span>
+                </div>
+
+                <div class="card out-card" id="panel-en" role="tabpanel">
+                    <div class="out-bar">
+                        <span class="result-box-label">English prompt</span>
+                        <button id="copy-btn" class="chip-btn"><svg><use href="#i-copy"/></svg><span>کپی</span></button>
+                    </div>
+                    <pre id="output" class="output output-english" dir="ltr"></pre>
+                </div>
+
+                <div class="card out-card hidden" id="panel-fa" role="tabpanel">
+                    <div class="out-bar">
+                        <span class="result-box-label">پرامپت فارسی</span>
+                        <button id="copy-persian-btn" class="chip-btn"><svg><use href="#i-copy"/></svg><span>کپی</span></button>
+                    </div>
+                    <pre id="output-persian" class="output output-persian"></pre>
+                </div>
+
+                <div class="analysis">
+                    <details class="acc" open>
+                        <summary><span>الزامات حفظ‌شده</span><em class="acc-count" id="count-req"></em><svg><use href="#i-chev"/></svg></summary>
+                        <div id="requirements-list" class="analysis-card-body" dir="ltr"></div>
+                    </details>
+                    <details class="acc">
+                        <summary><span>فرض‌ها</span><em class="acc-count" id="count-asm"></em><svg><use href="#i-chev"/></svg></summary>
+                        <div id="assumptions-list" class="analysis-card-body" dir="ltr"></div>
+                    </details>
+                    <details class="acc">
+                        <summary><span>اطلاعات ازدست‌رفته</span><em class="acc-count" id="count-mis"></em><svg><use href="#i-chev"/></svg></summary>
+                        <div id="missing-list" class="analysis-card-body" dir="ltr"></div>
+                    </details>
+                    <details class="acc">
+                        <summary><span>پیشنهادها</span><em class="acc-count" id="count-sug"></em><svg><use href="#i-chev"/></svg></summary>
+                        <div id="suggestions-list" class="analysis-card-body" dir="ltr"></div>
+                    </details>
+                </div>
+
+                <div class="agent-row">
+                    <button id="use-in-claude" class="btn btn-ghost"><svg><use href="#i-terminal"/></svg>Claude Code</button>
+                    <button id="use-in-opencode" class="btn btn-ghost"><svg><use href="#i-terminal"/></svg>OpenCode</button>
+                </div>
+            </section>
+        </main>
+
+        <div class="dock">
+            <button id="translate-btn" class="btn btn-primary btn-dock">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="btn-label">تبدیل کن</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <aside class="usage-sidebar sheet" id="usage-sidebar" aria-label="مصرف توکن">
+        <div class="sheet-grip" aria-hidden="true"></div>
+        <div class="sheet-header">
+            <h3><span class="dot"></span> مصرف توکن</h3>
+            <button id="close-sidebar" class="icon-btn icon-btn-sm" aria-label="بستن"><svg><use href="#i-close"/></svg></button>
+        </div>
+        <div id="usage-content" class="usage-content">
+            <div class="usage-loading">در حال بارگذاری...</div>
+        </div>
+    </aside>
+
+    <div id="settings-modal" class="modal" style="display:none;">
+        <div class="modal-content sheet-static">
+            <div class="sheet-grip" aria-hidden="true"></div>
+            <div class="sheet-header">
+                <h2>تنظیمات</h2>
+                <button id="close-modal" class="icon-btn icon-btn-sm" aria-label="بستن"><svg><use href="#i-close"/></svg></button>
+            </div>
+            <form id="settings-form">
+                <div class="provider-section" id="gemini-section">
+                    <h4>Google AI Studio (Gemini)</h4>
+                    <p class="note">فقط مدل‌های گوگل استودیو پشتیبانی می‌شوند. کلید API را از <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> بگیر.</p>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" name="gemini_api_key" value="{{ config.gemini_api_key }}" placeholder="AIza..." dir="ltr" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>مدل پیش‌فرض</label>
+                        <select name="gemini_model">
+                            <optgroup label="مدل‌های قابل استفاده (Text — generateContent)">
+                                {% for m in model_options.values() | sum(start=[]) if m.generate %}
+                                <option value="{{ m.id }}" {% if config.gemini_model == m.id %}selected{% endif %}>{{ m.name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="سایر مدل‌ها (غیرقابل استفاده)">
+                                {% for m in model_options.values() | sum(start=[]) if not m.generate %}
+                                <option value="{{ m.id }}" disabled>{{ m.name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>سیستم پرامپت اختصاصی (اختیاری)</label>
+                    <textarea name="system_prompt_override" rows="4" placeholder="در صورت تمایل پرامپت سیستم خودت رو وارد کن. خالی بذاری یعنی از حالت پیش‌فرض استفاده شود.">{{ config.system_prompt_override }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">ذخیره تنظیمات</button>
+                <div id="save-status" class="save-status"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+
+    <script>window.DEFAULT_MODEL = "{{ config.gemini_model }}";</script>
+    <script src="/static/script.js"></script>
+    <script src="/static/mobile.js"></script>
+</body>
+</html>

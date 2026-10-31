@@ -1,9 +1,7 @@
 package com.astr0net.promptcompiler.ui
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +10,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,10 +33,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -41,150 +46,105 @@ import com.astr0net.promptcompiler.BuildConfig
 import com.astr0net.promptcompiler.R
 import com.astr0net.promptcompiler.data.AppConfig
 import com.astr0net.promptcompiler.data.findModel
-import kotlinx.coroutines.delay
 
 @Composable
-fun SettingsScreen(
-    config: AppConfig,
-    defaultSystemPrompt: () -> String,
-    onSave: (AppConfig) -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var apiKey by rememberSaveable { mutableStateOf(config.geminiApiKey) }
-    var model by rememberSaveable { mutableStateOf(config.geminiModel) }
-    var systemPrompt by rememberSaveable { mutableStateOf(config.systemPromptOverride) }
-    var language by rememberSaveable { mutableStateOf(config.language) }
+fun SettingsScreen(config: AppConfig, defaultSystemPrompt: () -> String, onSave: (AppConfig) -> Unit, modifier: Modifier = Modifier) {
+    var apiKey by rememberSaveable(config.geminiApiKey) { mutableStateOf(config.geminiApiKey) }
+    var model by rememberSaveable(config.geminiModel) { mutableStateOf(config.geminiModel) }
+    var systemPrompt by rememberSaveable(config.systemPromptOverride) { mutableStateOf(config.systemPromptOverride) }
+    var language by rememberSaveable(config.language) { mutableStateOf(config.language) }
     var showKey by rememberSaveable { mutableStateOf(false) }
     var pickerOpen by rememberSaveable { mutableStateOf(false) }
-    var saved by rememberSaveable { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
+    val draft = AppConfig(apiKey.trim(), model, systemPrompt, language)
+    val dirty = draft != config
 
-    BackHandler(onBack = onBack)
-    LaunchedEffect(saved) {
-        if (saved) { delay(1100); onBack() }
-    }
+    Box(modifier) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            ScreenTitle(stringResource(R.string.settings))
 
-    Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            GhostButton("‹  " + stringResource(R.string.back), onBack)
-            Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge, color = Neon.Text, modifier = Modifier.weight(1f))
-        }
-
-        GlassCard {
-            Text(stringResource(R.string.settings_google_title), style = MaterialTheme.typography.titleSmall, color = Neon.Accent)
-            Spacer(Modifier.height(6.dp))
-            Text(stringResource(R.string.settings_google_note), style = MaterialTheme.typography.bodySmall, color = Neon.TextDim)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                stringResource(R.string.settings_get_key),
-                Modifier.clickable { uriHandler.openUri("https://aistudio.google.com/apikey") }.padding(vertical = 6.dp),
-                style = MaterialTheme.typography.bodySmall, color = Neon.Accent2,
-            )
-            Spacer(Modifier.height(6.dp))
-            FieldLabel(stringResource(R.string.settings_api_key))
-            FieldBox {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    BasicTextField(
-                        value = apiKey, onValueChange = { apiKey = it.filterNot(Char::isWhitespace) },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = Neon.Text, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, textDirection = TextDirection.Ltr),
-                        cursorBrush = SolidColor(Neon.Accent),
-                        visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
-                        decorationBox = { inner -> if (apiKey.isEmpty()) Text("AIza...", color = Neon.TextDim, style = MaterialTheme.typography.bodyMedium); inner() },
-                    )
-                    Text(
-                        if (showKey) stringResource(R.string.settings_hide_key) else stringResource(R.string.settings_show_key),
-                        Modifier.clickable { showKey = !showKey }.padding(start = 10.dp),
-                        style = MaterialTheme.typography.labelSmall, color = Neon.Accent,
-                    )
+            Group(stringResource(R.string.settings_group_connection)) {
+                Text(stringResource(R.string.settings_google_note), style = MaterialTheme.typography.bodySmall, color = Ink.Dim)
+                Row(Modifier.pressable { uriHandler.openUri("https://aistudio.google.com/apikey") }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.settings_get_key), style = MaterialTheme.typography.labelMedium, color = Ink.Violet)
+                    Icon(Icons.Rounded.OpenInNew, null, tint = Ink.Violet, modifier = Modifier.size(14.dp))
+                }
+                Field(stringResource(R.string.settings_api_key)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BasicTextField(
+                            value = apiKey, onValueChange = { apiKey = it.filterNot(Char::isWhitespace) }, singleLine = true, modifier = Modifier.weight(1f),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Ink.Text, fontFamily = FontFamily.Monospace, textDirection = TextDirection.Ltr),
+                            cursorBrush = SolidColor(Ink.Cyan),
+                            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
+                            decorationBox = { inner -> if (apiKey.isEmpty()) Text("AIza...", color = Ink.Faint, style = MaterialTheme.typography.bodyMedium); inner() },
+                        )
+                        IconAction(if (showKey) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, stringResource(if (showKey) R.string.settings_hide_key else R.string.settings_show_key), { showKey = !showKey })
+                    }
                 }
             }
-            Spacer(Modifier.height(12.dp))
-            FieldLabel(stringResource(R.string.settings_default_model))
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Neon.Surface2).border(1.dp, Neon.Border, RoundedCornerShape(14.dp))
-                    .clickable { pickerOpen = true }.padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(findModel(model)?.name ?: model, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = Neon.Text)
-                Text("⌄", color = Neon.Accent)
+
+            Group(stringResource(R.string.settings_group_compiler)) {
+                Field(stringResource(R.string.settings_default_model)) {
+                    Row(Modifier.fillMaxWidth().pressable { pickerOpen = true }, verticalAlignment = Alignment.CenterVertically) {
+                        Text(findModel(model)?.name ?: model, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = Ink.Text)
+                        Icon(Icons.Rounded.ExpandMore, null, tint = Ink.Cyan)
+                    }
+                }
+                Field(stringResource(R.string.settings_system_prompt)) {
+                    BasicTextField(
+                        value = systemPrompt, onValueChange = { systemPrompt = it }, modifier = Modifier.fillMaxWidth().height(130.dp),
+                        textStyle = MaterialTheme.typography.bodySmall.copy(color = Ink.Text, textDirection = TextDirection.Content),
+                        cursorBrush = SolidColor(Ink.Cyan),
+                        decorationBox = { inner -> if (systemPrompt.isEmpty()) Text(stringResource(R.string.settings_system_prompt_hint), color = Ink.Faint, style = MaterialTheme.typography.bodySmall); inner() },
+                    )
+                }
+                TonalButton(stringResource(R.string.settings_system_prompt_default), { systemPrompt = defaultSystemPrompt() })
+            }
+
+            Group(stringResource(R.string.settings_group_app)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.Language, null, tint = Ink.Dim, modifier = Modifier.size(18.dp))
+                    Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.labelMedium, color = Ink.Dim)
+                }
+                val langs = listOf(AppConfig.LANG_SYSTEM to R.string.settings_lang_system, AppConfig.LANG_FA to R.string.settings_lang_fa, AppConfig.LANG_EN to R.string.settings_lang_en)
+                SegmentedControl(langs.map { stringResource(it.second) }, langs.indexOfFirst { it.first == language }.coerceAtLeast(0), { language = langs[it].first })
+            }
+
+            Group(stringResource(R.string.settings_permissions_title)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Rounded.Lock, null, tint = Ink.Mint, modifier = Modifier.size(20.dp))
+                    Text(stringResource(R.string.settings_permissions_body), style = MaterialTheme.typography.bodySmall, color = Ink.Dim)
+                }
+            }
+
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = Ink.Faint)
+                Text(stringResource(R.string.settings_source), style = MaterialTheme.typography.labelSmall, color = Ink.Faint)
             }
         }
 
-        GlassCard {
-            FieldLabel(stringResource(R.string.settings_system_prompt))
-            FieldBox {
-                BasicTextField(
-                    value = systemPrompt, onValueChange = { systemPrompt = it },
-                    modifier = Modifier.fillMaxWidth().height(140.dp),
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = Neon.Text, textDirection = TextDirection.Content),
-                    cursorBrush = SolidColor(Neon.Accent),
-                    decorationBox = { inner -> if (systemPrompt.isEmpty()) Text(stringResource(R.string.settings_system_prompt_hint), color = Neon.TextDim, style = MaterialTheme.typography.bodySmall); inner() },
-                )
-            }
-            Spacer(Modifier.height(10.dp))
-            GhostButton(stringResource(R.string.settings_system_prompt_default), { systemPrompt = defaultSystemPrompt() })
-        }
-
-        GlassCard {
-            FieldLabel(stringResource(R.string.settings_language))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                LangChip(stringResource(R.string.settings_lang_system), language == AppConfig.LANG_SYSTEM) { language = AppConfig.LANG_SYSTEM }
-                LangChip(stringResource(R.string.settings_lang_fa), language == AppConfig.LANG_FA) { language = AppConfig.LANG_FA }
-                LangChip(stringResource(R.string.settings_lang_en), language == AppConfig.LANG_EN) { language = AppConfig.LANG_EN }
-            }
-        }
-
-        GlassCard {
-            Text("🔒  " + stringResource(R.string.settings_permissions_title), style = MaterialTheme.typography.titleSmall, color = Neon.Success)
-            Spacer(Modifier.height(6.dp))
-            Text(stringResource(R.string.settings_permissions_body), style = MaterialTheme.typography.bodySmall, color = Neon.TextDim)
-        }
-
-        GradientButton(
-            stringResource(if (saved) R.string.settings_saved else R.string.settings_save),
-            onClick = {
-                onSave(AppConfig(apiKey.trim(), model, systemPrompt, language))
-                saved = true
-            },
-            enabled = !saved,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Column(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = Neon.TextDim)
-            Text(stringResource(R.string.settings_source), style = MaterialTheme.typography.labelSmall, color = Neon.TextDim)
-        }
-        Spacer(Modifier.height(24.dp))
+        Box(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, Ink.Bg.copy(alpha = 0.92f), Ink.Bg)))
+                .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 12.dp),
+        ) { PrimaryButton(stringResource(R.string.settings_save), { onSave(draft) }, enabled = dirty) }
     }
 
     if (pickerOpen) ModelPickerSheet(selectedId = model, onSelect = { model = it; pickerOpen = false }, onDismiss = { pickerOpen = false })
 }
 
 @Composable
-private fun FieldLabel(text: String) {
-    Text(text, Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.labelMedium, color = Neon.TextDim)
+private fun Group(title: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Eyebrow(title, Modifier.padding(start = 4.dp), Ink.Cyan)
+        InkCard { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() } }
+    }
 }
 
 @Composable
-private fun FieldBox(content: @Composable () -> Unit) {
-    Box(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Neon.Surface2).border(1.dp, Neon.Border, RoundedCornerShape(14.dp)).padding(14.dp),
-    ) { content() }
-}
-
-@Composable
-private fun LangChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(12.dp)
-    Text(
-        label,
-        Modifier.clip(shape)
-            .background(if (selected) Neon.Accent.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-            .border(1.dp, if (selected) Neon.BorderStrong else Neon.Border, shape)
-            .clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
-        style = MaterialTheme.typography.labelMedium, color = if (selected) Neon.Accent else Neon.Text,
-    )
+private fun Field(label: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Ink.Dim)
+        Box(Modifier.fillMaxWidth().clip(RMd).background(Ink.S2).border(1.dp, Ink.Line, RMd).padding(horizontal = 14.dp, vertical = 12.dp)) { content() }
+    }
 }

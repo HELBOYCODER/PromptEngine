@@ -1,0 +1,1 @@
+2.1.0 — redesign: bottom navigation, English/Persian result switch, collapsible analysis, example chips, staged progress, usage ring chart, vector icons, and an on-device History of your last 100 prompts.

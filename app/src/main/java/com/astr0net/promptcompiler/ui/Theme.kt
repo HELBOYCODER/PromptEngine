@@ -13,25 +13,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.astr0net.promptcompiler.R
 
-/** Neon "deep space" palette taken from the reference web UI. */
-object Neon {
-    val Bg = Color(0xFF05060F)
-    val Bg2 = Color(0xFF0A0C1C)
-    val Surface = Color(0xB80F1226)
-    val Surface2 = Color(0xD9080A18)
-    val Border = Color(0x2978A0FF)
-    val BorderStrong = Color(0x6600F0FF)
-    val Text = Color(0xFFEAF0FF)
-    val TextDim = Color(0xFF8A93B8)
-    val Accent = Color(0xFF00F0FF)
-    val Accent2 = Color(0xFF7C5CFF)
-    val Accent3 = Color(0xFFFF2FD6)
-    val Success = Color(0xFF2DF6A5)
-    val Warn = Color(0xFFFFCE5C)
-    val Danger = Color(0xFFFF4D6D)
+/** Design tokens: tonal dark layers, hairlines, one electric-cyan accent (gradient only on CTA / brand). */
+object Ink {
+    val Bg = Color(0xFF07080D)
+    val S1 = Color(0xFF0E1018)
+    val S2 = Color(0xFF141722)
+    val S3 = Color(0xFF1B1F2E)
+    val Line = Color(0xFF252A3A)
+    val Text = Color(0xFFF1F3FA)
+    val Dim = Color(0xFF8E96AE)
+    val Faint = Color(0xFF5B6279)
+    val Cyan = Color(0xFF3DEBFF)
+    val Violet = Color(0xFF8F7CFF)
+    val Magenta = Color(0xFFFF4FD8)
+    val Mint = Color(0xFF3DF2A8)
+    val Amber = Color(0xFFFFC857)
+    val Coral = Color(0xFFFF5D73)
+    val OnCyan = Color(0xFF04141A)
 
-    val Primary = Brush.horizontalGradient(listOf(Accent, Accent2))
-    val Hot = Brush.horizontalGradient(listOf(Accent2, Accent3))
+    val Cta = Brush.horizontalGradient(listOf(Cyan, Violet))
 }
 
 val Vazirmatn = FontFamily(
@@ -59,18 +59,18 @@ private val AppTypography = Typography(
 )
 
 private val Scheme = darkColorScheme(
-    primary = Neon.Accent,
+    primary = Ink.Cyan,
     onPrimary = Color(0xFF021014),
-    secondary = Neon.Accent2,
-    tertiary = Neon.Accent3,
-    background = Neon.Bg,
-    onBackground = Neon.Text,
-    surface = Neon.Bg2,
-    onSurface = Neon.Text,
-    surfaceVariant = Color(0xFF12152B),
-    onSurfaceVariant = Neon.TextDim,
-    outline = Neon.Border,
-    error = Neon.Danger,
+    secondary = Ink.Violet,
+    tertiary = Ink.Magenta,
+    background = Ink.Bg,
+    onBackground = Ink.Text,
+    surface = Ink.S1,
+    onSurface = Ink.Text,
+    surfaceVariant = Ink.S2,
+    onSurfaceVariant = Ink.Dim,
+    outline = Ink.Line,
+    error = Ink.Coral,
 )
 
 @Composable

@@ -12,7 +12,7 @@
 </div>
 
 <div align="center">
-<img src="docs/screenshots/01_home_empty.png" width="22%"/> <img src="docs/screenshots/03_result_top.png" width="22%"/> <img src="docs/screenshots/04_result_bottom.png" width="22%"/> <img src="docs/screenshots/02_settings.png" width="22%"/>
+<img src="docs/screenshots/01_editor_empty.png" width="15%"/> <img src="docs/screenshots/03_result.png" width="15%"/> <img src="docs/screenshots/04_result_persian.png" width="15%"/> <img src="docs/screenshots/05_history.png" width="15%"/> <img src="docs/screenshots/06_usage.png" width="15%"/> <img src="docs/screenshots/02_settings.png" width="15%"/>
 </div>
 
 ---
@@ -46,7 +46,9 @@ Persian input ─► Intent analysis ─► canonical english_prompt  (single so
 
 ## Features on Android
 
-* Neon dark RTL UI with the Vazirmatn font; full **Persian + English** interface (switch in Settings).
+* **New in 2.1** — redesigned UI: bottom navigation (Editor · History · Usage · Settings), result card with an English/Persian switch, collapsible analysis sections, example chips, staged compile progress, usage ring chart, vector icons throughout.
+* **History**: every compiled prompt is saved on-device (last 100); tap to reopen, delete one or clear all.
+* Dark RTL UI with the Vazirmatn font; full **Persian + English** interface (switch in Settings).
 * Model picker with the complete Gemini catalog (usable text models + greyed-out unsupported ones).
 * One-tap **copy** (English / Persian), **Use in Claude Code / OpenCode**, and Android **Share**.
 * **Share-to-app**: select text anywhere → Share → *Prompt Engine*.
@@ -56,11 +58,11 @@ Persian input ─► Intent analysis ─► canonical english_prompt  (single so
 
 ## Install
 
-1. Download [`releases/PromptEngine-2.0.0.apk`](releases/PromptEngine-2.0.0.apk) (≈ 2–3 MB, a single file — no more split parts).
+1. Download [`releases/PromptEngine-2.1.0.apk`](releases/PromptEngine-2.1.0.apk) (≈ 2–3 MB, a single file — no more split parts).
 2. Allow *Install unknown apps* for your browser/file manager, then open the APK.
 3. Requires Android 7.0 (API 24) or newer.
 
-SHA-256 of the APK: see [`releases/PromptEngine-2.0.0.apk.sha256`](releases/PromptEngine-2.0.0.apk.sha256).
+SHA-256 of the APK: see [`releases/PromptEngine-2.1.0.apk.sha256`](releases/PromptEngine-2.1.0.apk.sha256).
 
 > Upgrading from the old 1.0.x (Python/Chaquopy) build? Uninstall it first — it was signed with a different key.
 
@@ -90,8 +92,8 @@ Release signing uses `keystore.properties` / `PE_*` env vars if present; otherwi
 
 ```text
 app/src/main/java/com/astr0net/promptcompiler/
-├── data/           Catalog · PromptEngine (parser) · Gemini (HTTP) · Usage · Settings · Compiler
-├── ui/             Theme · Components · MainScreen · ModelPicker · UsageSheet · SettingsScreen
+├── data/           Catalog · PromptEngine (parser) · Gemini (HTTP) · Usage · History · Settings · Compiler
+├── ui/             Theme (Ink tokens) · Components · EditorScreen · HistoryScreen · UsageScreen · SettingsScreen · ModelPicker
 ├── MainActivity.kt · MainViewModel.kt · PromptEngineApp.kt
 app/src/main/assets/system_prompt.txt   the original compiler policy
 fastlane/metadata/android/{en-US,fa}/   store listing (title, short + full description, changelog, icon)
@@ -119,7 +121,9 @@ fastlane/metadata/android/{en-US,fa}/   store listing (title, short + full descr
 
 ## امکانات نسخه اندروید
 
-* رابط تیره نئونی راست‌به‌چپ با فونت وزیرمتن؛ **فارسی + انگلیسی** کامل (از تنظیمات عوض می‌شود).
+* **جدید در ۲٫۱** — طراحی تازه: ناوبری پایین (ویرایشگر · تاریخچه · مصرف · تنظیمات)، کارت نتیجه با سوییچ انگلیسی/فارسی، بخش‌های تحلیل جمع‌شونده، نمونه‌های آماده، پیشرفت مرحله‌ای کامپایل، نمودار حلقه‌ای مصرف و آیکون‌های برداری.
+* **تاریخچه**: هر پرامپت کامپایل‌شده روی دستگاه ذخیره می‌شود (۱۰۰ مورد آخر)؛ با لمس دوباره باز می‌شود، حذف تکی یا پاک‌کردن همه.
+* رابط تیره راست‌به‌چپ با فونت وزیرمتن؛ **فارسی + انگلیسی** کامل (از تنظیمات عوض می‌شود).
 * انتخاب مدل با کاتالوگ کامل Gemini (مدل‌های متنی قابل‌استفاده + مدل‌های غیرقابل‌استفاده به‌صورت خاکستری).
 * **کپی** با یک لمس (انگلیسی / فارسی)، **استفاده در Claude Code / OpenCode** و **اشتراک‌گذاری** اندروید.
 * **دریافت متن از اپ‌های دیگر**: متن را انتخاب کن ← اشتراک‌گذاری ← *Prompt Engine*.
@@ -129,11 +133,11 @@ fastlane/metadata/android/{en-US,fa}/   store listing (title, short + full descr
 
 ## نصب
 
-۱. فایل [`releases/PromptEngine-2.0.0.apk`](releases/PromptEngine-2.0.0.apk) را دانلود کن (حدود ۲ تا ۳ مگابایت، **یک فایل واحد** — دیگر خبری از پارت‌های جدا نیست).
+۱. فایل [`releases/PromptEngine-2.1.0.apk`](releases/PromptEngine-2.1.0.apk) را دانلود کن (حدود ۲ تا ۳ مگابایت، **یک فایل واحد** — دیگر خبری از پارت‌های جدا نیست).
 ۲. برای مرورگر یا فایل‌منیجر گزینه «نصب از منابع ناشناس» را فعال کن و APK را باز کن.
 ۳. حداقل اندروید ۷٫۰ (API 24).
 
-هش SHA-256 فایل: [`releases/PromptEngine-2.0.0.apk.sha256`](releases/PromptEngine-2.0.0.apk.sha256).
+هش SHA-256 فایل: [`releases/PromptEngine-2.1.0.apk.sha256`](releases/PromptEngine-2.1.0.apk.sha256).
 
 > اگر نسخه قدیمی ۱٫۰٫x (پایتون/Chaquopy) را داری، اول آن را حذف کن؛ با کلید دیگری امضا شده بود.
 

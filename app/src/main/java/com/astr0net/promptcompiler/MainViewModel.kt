@@ -11,6 +11,7 @@ import com.astr0net.promptcompiler.data.CompileError
 import com.astr0net.promptcompiler.data.CompileOutcome
 import com.astr0net.promptcompiler.data.DEFAULT_MODEL
 import com.astr0net.promptcompiler.data.GENERATE_MODELS
+import com.astr0net.promptcompiler.data.HistoryItem
 import com.astr0net.promptcompiler.data.ParsedResult
 import com.astr0net.promptcompiler.data.UsageSnapshot
 import kotlinx.coroutines.Job
@@ -28,7 +29,7 @@ sealed interface Msg {
     data class Raw(val text: String) : Msg
 }
 
-enum class Screen { Main, Settings }
+enum class Screen { Editor, History, Usage, Settings }
 
 data class UiState(
     val input: String = "",
@@ -37,8 +38,8 @@ data class UiState(
     val result: ParsedResult? = null,
     val usage: UsageSnapshot? = null,
     val config: AppConfig = AppConfig(),
-    val screen: Screen = Screen.Main,
-    val usageOpen: Boolean = false,
+    val screen: Screen = Screen.Editor,
+    val history: List<HistoryItem> = emptyList(),
 )
 
 class MainViewModel(private val app: PromptEngineApp) : ViewModel() {
@@ -52,17 +53,26 @@ class MainViewModel(private val app: PromptEngineApp) : ViewModel() {
 
     init {
         val config = app.configStore.load()
-        _state.update { it.copy(config = config, modelId = usableModel(config.geminiModel), usage = app.usageStore.compute()) }
+        _state.update { it.copy(config = config, modelId = usableModel(config.geminiModel), usage = app.usageStore.compute(), history = app.historyStore.load()) }
     }
 
     private fun usableModel(id: String) = if (GENERATE_MODELS.any { it.id == id }) id else GENERATE_MODELS.first().id
 
     fun setInput(text: String) = _state.update { it.copy(input = text) }
     fun selectModel(id: String) = _state.update { it.copy(modelId = id) }
-    fun open(screen: Screen) = _state.update { it.copy(screen = screen) }
-    fun setUsageOpen(open: Boolean) {
-        if (open) refreshUsage()
-        _state.update { it.copy(usageOpen = open) }
+    fun open(screen: Screen) {
+        if (screen == Screen.Usage) refreshUsage()
+        _state.update { it.copy(screen = screen, history = if (screen == Screen.History) app.historyStore.load() else it.history) }
+    }
+    fun openHistoryItem(item: HistoryItem) = _state.update {
+        it.copy(input = item.input, result = item.result, screen = Screen.Editor, modelId = if (GENERATE_MODELS.any { m -> m.id == item.modelId }) item.modelId else it.modelId)
+    }
+
+    fun deleteHistory(id: Long) { _state.update { it.copy(history = app.historyStore.delete(id)) } }
+
+    fun clearHistory() {
+        app.historyStore.clear()
+        _state.update { it.copy(history = emptyList()) }
     }
 
     fun refreshUsage() = _state.update { it.copy(usage = app.usageStore.compute()) }
@@ -89,7 +99,10 @@ class MainViewModel(private val app: PromptEngineApp) : ViewModel() {
         job = viewModelScope.launch {
             val outcome = app.compiler.compile(s.input.trim(), s.modelId)
             when (outcome) {
-                is CompileOutcome.Success -> _state.update { it.copy(result = outcome.parsed, loading = false, usage = app.usageStore.compute()) }
+                is CompileOutcome.Success -> {
+                    val history = app.historyStore.add(s.input.trim(), outcome.modelId, outcome.parsed)
+                    _state.update { it.copy(result = outcome.parsed, loading = false, usage = app.usageStore.compute(), history = history) }
+                }
                 is CompileOutcome.Failure -> {
                     _state.update { it.copy(loading = false) }
                     _messages.trySend(

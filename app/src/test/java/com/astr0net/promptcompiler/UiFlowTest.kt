@@ -91,56 +91,71 @@ class UiFlowTest {
     }
 
     private fun str(id: Int) = rule.activity.getString(id)
+    private fun app() = ApplicationProvider.getApplicationContext<PromptEngineApp>()
+    private fun vm() = androidx.lifecycle.ViewModelProvider(rule.activity, MainViewModel.Factory)[MainViewModel::class.java]
+    private fun hasText(t: String, substring: Boolean = false) = rule.onAllNodesWithTextSafe(t, substring)
 
-    @Test fun firstRunShowsKeyBannerAndSettingsSavesKey() {
-        rule.onNodeWithText(str(R.string.no_key_title), substring = true).assertIsDisplayed()
-        shot("01_home_empty")
+    private fun settle() = rule.waitForIdle()
+
+    @Test fun firstRunKeyBannerSettingsAndSave() {
+        rule.onNodeWithText(str(R.string.no_key_title)).assertIsDisplayed()
+        shot("01_editor_empty")
         rule.onNodeWithText(str(R.string.no_key_action)).performClick()
-        rule.onNodeWithText(str(R.string.settings_save)).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText(str(R.string.settings_group_connection)).assertIsDisplayed()
         shot("02_settings")
         rule.onNodeWithText("AIza...").performTextInput("AIzaSyTESTKEY")
-        rule.onNodeWithText(str(R.string.settings_save)).performScrollTo().performClick()
-        rule.waitUntil(5000) { rule.onAllNodesWithTextSafe(str(R.string.compile)) }
-        assertEquals("AIzaSyTESTKEY", ApplicationProvider.getApplicationContext<PromptEngineApp>().configStore.load().geminiApiKey)
+        rule.onNodeWithText(str(R.string.settings_save)).performClick()
+        rule.waitUntil(5000) { app().configStore.load().geminiApiKey == "AIzaSyTESTKEY" }
+        rule.waitUntil(5000) { hasText(str(R.string.settings_saved)) }
     }
 
-    @OptIn(ExperimentalTestApi::class)
-    @Test fun compileFlowShowsResultAndUsage() {
-        val app = ApplicationProvider.getApplicationContext<PromptEngineApp>()
-        app.configStore.save(AppConfig(geminiApiKey = "KEY123"))
-        rule.activityRule.scenario.recreate()
+    @Test fun compileFlowShowsResultHistoryAndUsage() {
+        app().configStore.save(AppConfig(geminiApiKey = "KEY123"))
+        rule.runOnUiThread { vm().saveConfig(AppConfig(geminiApiKey = "KEY123")) }
+        settle()
 
-        rule.onNodeWithText(str(R.string.input_hint), substring = true).performTextInput("یه وب‌سایت فروشگاهی با فلسک بساز که قیمت محصولات رو نشون بده")
+        // example chip fills the editor
+        rule.onNodeWithText(str(R.string.ex1_label)).performClick()
         rule.onNodeWithText(str(R.string.compile)).performClick()
         try {
-            rule.waitUntil(10_000) { rule.onAllNodesWithTextSafe("Build an online shop website with Flask", substring = true) }
+            rule.waitUntil(10_000) { hasText("Build an online shop website with Flask", substring = true) }
         } catch (e: Throwable) {
             System.err.println("TREE>>> " + rule.onRoot().printToString(5000) + "\nREQS=" + requests.size)
             throw e
         }
-        rule.onNodeWithText("Build an online shop website with Flask", substring = true).performScrollTo().assertIsDisplayed()
-        shot("03_result_top")
+        shot("03_result")
         rule.onNodeWithText(str(R.string.use_in_claude)).performScrollTo().assertIsDisplayed()
-        shot("04_result_bottom")
+        // switch to the Persian tab
+        rule.onNodeWithText(str(R.string.tab_persian)).performScrollTo().performClick()
+        settle()
+        rule.onNodeWithText("یک وب‌سایت فروشگاهی با Flask", substring = true).assertIsDisplayed()
+        shot("04_result_persian")
 
         assertEquals(1, requests.size)
         assertTrue(requests[0].path!!.startsWith("/v1beta/models/gemini-3.5-flash:generateContent?key=KEY123"))
         val sent = JSONObject(requests[0].body.readUtf8()).getJSONArray("contents").getJSONObject(0).getJSONArray("parts").getJSONObject(0).getString("text")
-        assertTrue(sent.endsWith("فلسک بساز که قیمت محصولات رو نشون بده"))
+        assertTrue(sent.endsWith(str(R.string.ex1_text)))
 
-        assertEquals(1, app.usageStore.compute().today.requests)
-        assertEquals(1840, app.usageStore.compute().today.total)
+        assertEquals(1840, app().usageStore.compute().today.total)
+        assertEquals(1, app().historyStore.load().size)
+        assertEquals(str(R.string.ex1_text), app().historyStore.load()[0].input)
+
+        // history tab lists it, usage tab shows the ring + meters
+        rule.onNodeWithText(str(R.string.nav_history)).performClick()
+        rule.onNodeWithText(str(R.string.ex1_text), substring = true).assertIsDisplayed()
+        shot("05_history")
+        rule.onNodeWithText(str(R.string.nav_usage)).performClick()
+        rule.onNodeWithText(str(R.string.meter_rpd)).assertIsDisplayed()
+        shot("06_usage")
     }
 
-    @Test fun usageSheetAndModelPickerOpen() {
-        val app = ApplicationProvider.getApplicationContext<PromptEngineApp>()
-        app.configStore.save(AppConfig(geminiApiKey = "KEY123"))
-        app.usageStore.record("gemini-3.5-flash", com.astr0net.promptcompiler.data.UsageMetadata(900, 500, 0, 1400))
-        app.usageStore.record("gemini-3.5-flash", com.astr0net.promptcompiler.data.UsageMetadata(900, 500, 0, 1400))
+    @Test fun historyOpenAndClear() {
+        app().configStore.save(AppConfig(geminiApiKey = "KEY123"))
+        app().historyStore.add("متن نمونه", "gemini-3.5-flash", com.astr0net.promptcompiler.data.PromptEngine.parseModelOutput(modelJson))
         rule.activityRule.scenario.recreate()
-        rule.onNodeWithText(str(R.string.usage_title), substring = true).performClick()
-        rule.onNodeWithText(str(R.string.meter_rpd)).assertIsDisplayed()
-        shot("05_usage")
+        rule.onNodeWithText(str(R.string.nav_history)).performClick()
+        rule.onNodeWithText("متن نمونه").performClick()
+        rule.waitUntil(5000) { hasText("Build an online shop website with Flask", substring = true) }
     }
 }
 

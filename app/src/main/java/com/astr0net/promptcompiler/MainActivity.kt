@@ -17,6 +17,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,12 +43,27 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.astr0net.promptcompiler.data.AppConfig
-import com.astr0net.promptcompiler.ui.MainScreen
-import com.astr0net.promptcompiler.ui.Neon
-import com.astr0net.promptcompiler.ui.NeonBackground
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import com.astr0net.promptcompiler.ui.BottomNav
+import com.astr0net.promptcompiler.ui.EditorScreen
+import com.astr0net.promptcompiler.ui.HistoryScreen
+import com.astr0net.promptcompiler.ui.InkBackground
+import com.astr0net.promptcompiler.ui.NavItem
 import com.astr0net.promptcompiler.ui.PromptEngineTheme
 import com.astr0net.promptcompiler.ui.SettingsScreen
-import com.astr0net.promptcompiler.ui.UsageSheet
+import com.astr0net.promptcompiler.ui.ToastBubble
+import com.astr0net.promptcompiler.ui.UsageScreen
 import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
@@ -77,40 +93,43 @@ class MainActivity : AppCompatActivity() {
                     if (toast != null) { delay(3200); toast = null }
                 }
 
-                NeonBackground {
-                    Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).imePadding()) {
-                        AnimatedContent(
-                            targetState = state.screen,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            label = "screen",
-                        ) { screen ->
-                            when (screen) {
-                                Screen.Main -> MainScreen(state, vm, Modifier.fillMaxSize())
-                                Screen.Settings -> SettingsScreen(
-                                    config = state.config,
-                                    defaultSystemPrompt = { assets.open("system_prompt.txt").bufferedReader().use { it.readText() } },
-                                    onSave = vm::saveConfig,
-                                    onBack = { vm.open(Screen.Main) },
-                                    modifier = Modifier.fillMaxSize(),
-                                )
+                InkBackground {
+                    val imeOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+                    val navItems = listOf(
+                        NavItem(stringResource(R.string.nav_editor), Icons.Outlined.Edit, Icons.Rounded.Edit),
+                        NavItem(stringResource(R.string.nav_history), Icons.Outlined.History, Icons.Rounded.History),
+                        NavItem(stringResource(R.string.nav_usage), Icons.Outlined.BarChart, Icons.Rounded.BarChart),
+                        NavItem(stringResource(R.string.settings), Icons.Outlined.Settings, Icons.Rounded.Settings),
+                    )
+                    Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).imePadding()) {
+                        Column(Modifier.fillMaxSize()) {
+                            AnimatedContent(
+                                targetState = state.screen,
+                                modifier = Modifier.weight(1f),
+                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                label = "screen",
+                            ) { screen ->
+                                val m = Modifier.fillMaxSize()
+                                when (screen) {
+                                    Screen.Editor -> EditorScreen(state, vm, m)
+                                    Screen.History -> HistoryScreen(state, vm, m)
+                                    Screen.Usage -> UsageScreen(state, vm, m)
+                                    Screen.Settings -> SettingsScreen(
+                                        config = state.config,
+                                        defaultSystemPrompt = { assets.open("system_prompt.txt").bufferedReader().use { it.readText() } },
+                                        onSave = { vm.saveConfig(it); vm.toast(Msg.Res(R.string.settings_saved)) },
+                                        modifier = m,
+                                    )
+                                }
                             }
+                            if (!imeOpen) BottomNav(navItems, state.screen.ordinal, { vm.open(Screen.entries[it]) })
                         }
                         AnimatedVisibility(
                             toast != null,
-                            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp).navigationBarsPadding(),
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = if (imeOpen) 80.dp else 96.dp),
                             enter = slideInVertically { it } + fadeIn(),
                             exit = slideOutVertically { it } + fadeOut(),
-                        ) {
-                            Text(
-                                toast.orEmpty(),
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Neon.Bg2)
-                                    .border(1.dp, Neon.BorderStrong, RoundedCornerShape(16.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
-                                style = MaterialTheme.typography.bodyMedium, color = Neon.Text,
-                            )
-                        }
-                    }
-                    if (state.usageOpen) {
-                        UsageSheet(state.usage, state.modelId, onReset = vm::resetUsage, onDismiss = { vm.setUsageOpen(false) })
+                        ) { ToastBubble(toast.orEmpty()) }
                     }
                 }
             }

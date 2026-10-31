@@ -11,6 +11,9 @@ It is not a translator. Write what you want in Persian, and the app compiles it 
 • Proportional output — a one-line edit gets a one-line prompt, a big architecture gets a structured one.
 
 <b>Built for the phone</b>
+• Bottom navigation: Editor, History, Usage, Settings.
+• Result card with an English / Persian switch and collapsible requirement, assumption, missing-info and suggestion sections.
+• History: your last 100 compiled prompts, saved only on your device.
 • Dark neon RTL interface with the Vazirmatn font; full Persian and English UI.
 • One-tap copy of the English or Persian prompt, "Use in Claude Code / OpenCode", and Android Share.
 • Send text to the app from any other app with Share → Prompt Engine.
